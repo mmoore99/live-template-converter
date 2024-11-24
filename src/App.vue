@@ -7,7 +7,6 @@
         <div class="col-span-1">
           <div class="flex items-end mb-4 bg-white rounded-lg shadow p-4">
             <FilenameInput v-model="filename" />
-            <OutputToggle v-model="includeBrackets" />
           </div>
         </div>
         <div class="col-span-1"></div>
@@ -20,8 +19,11 @@
 
         <OutputPanel
           :content="formattedOutput"
+          :language="'jsonc'"
+          :include-brackets="includeBrackets"
           @copy="copyToClipboard"
           @download="downloadJson"
+          @update:include-brackets="includeBrackets = $event"
         />
       </div>
     </div>
@@ -32,28 +34,19 @@
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { parseWebStormTemplate, convertToSnippets } from './utils/converter'
+import { formatSnippetOutput, getFormattedContent, type SnippetOutput } from './utils/formatter'
 import FilenameInput from './components/FilenameInput.vue'
 import SourcePanel from './components/SourcePanel.vue'
 import OutputPanel from './components/OutputPanel.vue'
-import OutputToggle from './components/OutputToggle.vue'
 
 const toast = useToast()
 const sourceContent = ref('')
-const snippets = ref<Record<string, any>>({})
+const snippets = ref<SnippetOutput>({})
 const filename = ref('snippets')
 const includeBrackets = ref(false)
 
 const formattedOutput = computed(() => {
-  if (!Object.keys(snippets.value).length) return ''
-  
-  const output = JSON.stringify(snippets.value, null, 2)
-  if (includeBrackets.value) return output
-  
-  return output
-    .split('\n')
-    .slice(1, -1)
-    .join('\n')
-    .trim()
+  return formatSnippetOutput(snippets, includeBrackets.value)
 })
 
 const templateCount = computed(() => {
@@ -80,20 +73,19 @@ function clearSource() {
   snippets.value = {}
 }
 
-function copyToClipboard() {
-  let content = formattedOutput.value
-  if (!includeBrackets.value) {
-    content = `{\n${content}\n}`
+async function copyToClipboard() {
+  try {
+    const content = getFormattedContent(snippets.value, includeBrackets.value)
+    await navigator.clipboard.writeText(content)
+    toast.success('Copied to clipboard!')
+  } catch (error) {
+    console.error('Error copying to clipboard:', error)
+    toast.error('Failed to copy to clipboard')
   }
-  navigator.clipboard.writeText(content)
-  toast.success('Copied to clipboard!')
 }
 
 function downloadJson() {
-  let content = formattedOutput.value
-  if (!includeBrackets.value) {
-    content = `{\n${content}\n}`
-  }
+  const content = getFormattedContent(snippets.value, includeBrackets.value)
   
   const blob = new Blob([content], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
