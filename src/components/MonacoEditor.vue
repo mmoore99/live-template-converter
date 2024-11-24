@@ -1,0 +1,215 @@
+<template>
+  <div ref="editorContainer" class="w-full h-[calc(100vh-300px)] border rounded overflow-hidden"></div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import * as monaco from 'monaco-editor'
+
+const props = defineProps<{
+  modelValue: string
+  language: string
+  readOnly?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+}>()
+
+const editorContainer = ref<HTMLElement>()
+let editor: monaco.editor.IStandaloneCodeEditor | null = null
+
+onMounted(() => {
+  if (!editorContainer.value) return
+
+  // Enhanced theme with better syntax highlighting
+  monaco.editor.defineTheme('snippetTheme', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: 'string.key.json', foreground: '0451A5', fontStyle: 'bold' },
+      { token: 'string.value.json', foreground: '098658' },
+      { token: 'keyword.json', foreground: '0000FF' },
+      { token: 'number.json', foreground: '098658' },
+      { token: 'string.escape.json', foreground: '0451A5' },
+      { token: 'variable.parameter', foreground: 'D16969', fontStyle: 'italic' },
+      { token: 'variable.other', foreground: 'D16969' },
+      { token: 'delimiter.bracket.json', foreground: '000000', fontStyle: 'bold' },
+      { token: 'delimiter.array.json', foreground: '000000' },
+      { token: 'delimiter.comma.json', foreground: '000000' },
+      { token: 'comment.line.json', foreground: '008000', fontStyle: 'italic' },
+      { token: 'comment.block.json', foreground: '008000', fontStyle: 'italic' }
+    ],
+    colors: {
+      'editor.background': '#FFFFFF',
+      'editor.foreground': '#000000',
+      'editor.lineHighlightBackground': '#F7F7F7',
+      'editorLineNumber.foreground': '#999999',
+      'editor.selectionBackground': '#ADD6FF',
+      'editor.inactiveSelectionBackground': '#E5EBF1',
+      'editorIndentGuide.background': '#D3D3D3',
+      'editorIndentGuide.activeBackground': '#A9A9A9'
+    }
+  })
+
+  // Configure JSON language features with enhanced schema
+  if (props.language === 'jsonc') {
+    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      validate: true,
+      allowComments: true,
+      schemas: [{
+        uri: 'vscode://schemas/snippets',
+        fileMatch: ['*'],
+        schema: {
+          type: 'object',
+          additionalProperties: {
+            type: 'object',
+            required: ['prefix', 'body'],
+            properties: {
+              prefix: {
+                type: ['string', 'array'],
+                description: 'The prefix to use when selecting the snippet',
+                items: {
+                  type: 'string'
+                }
+              },
+              body: {
+                type: ['string', 'array'],
+                description: 'The snippet content',
+                items: {
+                  type: 'string'
+                }
+              },
+              description: {
+                type: 'string',
+                description: 'The description of the snippet'
+              },
+              scope: {
+                type: 'string',
+                description: 'A comma-separated list of language names where the snippet is applicable'
+              }
+            }
+          }
+        }
+      }],
+      enableSchemaRequest: true,
+      schemaRequest: 'warning'
+    })
+  }
+
+  // Enhanced tokenizer for VSCode snippet variables
+  if (props.language === 'jsonc') {
+    monaco.languages.setMonarchTokensProvider('jsonc', {
+      defaultToken: '',
+      tokenPostfix: '.json',
+
+      tokenizer: {
+        root: [
+          // Special snippet variable highlighting
+          [/(\$)(\d+)/, ['variable.other', 'variable.other']],
+          [/(\$\{)([^:}]+)(:)([^}]+)(\})/, ['variable.parameter', 'variable.parameter', 'variable.parameter', 'variable.parameter', 'variable.parameter']],
+          [/(\$\{)([^}]+)(\})/, ['variable.parameter', 'variable.parameter', 'variable.parameter']],
+          
+          // Standard JSON syntax
+          [/"([^"\\]|\\.)*"/, 'string'],
+          [/[{}]/, 'delimiter.bracket'],
+          [/[[\]]/, 'delimiter.array'],
+          [/[,]/, 'delimiter.comma'],
+          [/[0-9]+/, 'number'],
+          [/true|false/, 'keyword'],
+          [/null/, 'keyword'],
+          
+          // Comments
+          [/\/\/.*$/, 'comment.line'],
+          [/\/\*/, 'comment.block', '@comment']
+        ],
+        
+        comment: [
+          [/[^/*]+/, 'comment.block'],
+          [/\*\//, 'comment.block', '@pop'],
+          [/[/*]/, 'comment.block']
+        ]
+      }
+    })
+  }
+
+  editor = monaco.editor.create(editorContainer.value, {
+    value: props.modelValue,
+    language: props.language,
+    theme: 'snippetTheme',
+    automaticLayout: true,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    readOnly: props.readOnly,
+    fontSize: 14,
+    tabSize: 2,
+    wordWrap: 'on',
+    lineNumbers: 'on',
+    renderWhitespace: 'selection',
+    bracketPairColorization: {
+      enabled: true,
+    },
+    scrollbar: {
+      vertical: 'visible',
+      horizontal: 'visible'
+    },
+    formatOnPaste: true,
+    formatOnType: true,
+    suggest: {
+      showWords: false,
+      showSnippets: true,
+      showUsers: false,
+      showMethods: false,
+      showFunctions: false,
+      showConstructors: false,
+      showFields: false,
+      showVariables: false,
+      showClasses: false,
+      showStructs: false,
+      showInterfaces: false,
+      showModules: false,
+      showProperties: false,
+      showEvents: false,
+      showOperators: false,
+      showUnits: false,
+      showValues: false,
+      showConstants: false,
+      showEnums: false,
+      showEnumMembers: false,
+      showKeywords: false,
+      showTypeParameters: false,
+      showColors: false,
+      showFiles: false,
+      showReferences: false,
+      showFolders: false,
+      showInlineDetails: true,
+      showStatusBar: true,
+    }
+  })
+
+  editor.onDidChangeModelContent(() => {
+    const value = editor?.getValue() || ''
+    emit('update:modelValue', value)
+  })
+
+  // Format the initial content
+  if (props.language === 'jsonc' && editor) {
+    editor.getAction('editor.action.formatDocument')?.run()
+  }
+})
+
+watch(() => props.modelValue, (newValue) => {
+  if (editor && newValue !== editor.getValue()) {
+    editor.setValue(newValue)
+    if (props.language === 'jsonc') {
+      editor.getAction('editor.action.formatDocument')?.run()
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  if (editor) {
+    editor.dispose()
+  }
+})
+</script>
