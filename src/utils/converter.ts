@@ -86,21 +86,22 @@ function processBody(template: WebStormTemplate): string[] {
   let value = template.value;
   let varIndex = 1;
 
+  // Replace variables with placeholders
   for (const variable of template.variables) {
     const placeholder = createPlaceholder(variable, varIndex++);
     value = value.replace(new RegExp(`\\$${variable.name}\\$`, 'g'), placeholder);
   }
 
-  value = value.replace(/\$END\$/g, '$0');
-  value = value.replace(/&amp;/g, '&')
+  // Replace end marker and HTML entities
+  value = value.replace(/\$END\$/g, '$0')
+               .replace(/&amp;/g, '&')
                .replace(/&lt;/g, '<')
                .replace(/&gt;/g, '>')
                .replace(/&quot;/g, '"')
                .replace(/&#39;/g, "'");
 
-  return value.split(/(?:&#10;|\n)/)
-             .map(line => line.trim())
-             .filter(Boolean);
+  // Split into lines while preserving empty lines and indentation
+  return value.split(/(?:&#10;|\n)/);
 }
 
 export function convertToSnippets(templates: WebStormTemplate[]): Record<string, any> {
