@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-white rounded-lg shadow p-4">
-    <div class="flex justify-between items-center mb-4">
+  <div class="p-4 bg-white rounded-lg shadow">
+    <div class="flex items-center justify-between mb-4">
       <h2 class="text-xl font-semibold">VSCode Snippets</h2>
       <div class="flex items-center space-x-4">
         <OutputToggle
@@ -10,13 +10,13 @@
         <div class="space-x-2">
           <button 
             @click="$emit('copy')" 
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
           >
             Copy
           </button>
           <button 
             @click="$emit('download')" 
-            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            class="px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
           >
             Download
           </button>
@@ -25,7 +25,7 @@
     </div>
     <MonacoEditor
       v-model="editorContent"
-      :language="language"
+      :language="'vscode-snippet'"
       :read-only="true"
     />
   </div>

@@ -133,9 +133,70 @@ onMounted(() => {
     })
   }
 
+  // Define a custom language for VSCode snippets
+  monaco.languages.register({ id: 'vscode-snippet' })
+
+  monaco.languages.setMonarchTokensProvider('vscode-snippet', {
+    defaultToken: '',
+    tokenPostfix: '.json',
+
+    tokenizer: {
+      root: [
+        // Placeholders like ${1:label}, ${1}, ${1|option1,option2|}
+        [/\$\{[\d]+(:[^}]+)?\}/, 'variable.parameter'],
+        [/\$\{[\d]+\|[^}]+\|\}/, 'variable.parameter'],
+        [/\$[\d]+/, 'variable.parameter'],
+        // Strings
+        [/"([^"\\]|\\.)*"/, 'string'],
+        // Numbers
+        [/\b\d+\b/, 'number'],
+        // Keywords (true, false, null)
+        [/\b(?:true|false|null)\b/, 'keyword'],
+        // Brackets and punctuation
+        [/[{}]/, 'delimiter.bracket'],
+        [/[\[\]]/, 'delimiter.array'],
+        [/,/, 'delimiter.comma'],
+        // Comments
+        [/\/\/.*$/, 'comment'],
+        [/\/\*/, 'comment', '@comment'],
+        // Whitespace
+        [/\s+/, 'white'],
+      ],
+      comment: [
+        [/[^/*]+/, 'comment'],
+        [/\*\//, 'comment', '@pop'],
+        [/./, 'comment'],
+      ],
+    },
+  })
+
+  monaco.languages.setLanguageConfiguration('vscode-snippet', {
+    comments: {
+      lineComment: '//',
+      blockComment: ['/*', '*/'],
+    },
+    brackets: [
+      ['{', '}'],
+      ['[', ']'],
+      ['(', ')'],
+    ],
+    autoClosingPairs: [
+      { open: '{', close: '}' },
+      { open: '[', close: ']' },
+      { open: '(', close: ')' },
+      { open: '"', close: '"' },
+    ],
+    surroundingPairs: [
+      { open: '{', close: '}' },
+      { open: '[', close: ']' },
+      { open: '(', close: ')' },
+      { open: '"', close: '"' },
+    ],
+  })
+
   editor = monaco.editor.create(editorContainer.value, {
     value: props.modelValue,
-    language: props.language,
+    language: props.language === 'vscode-snippet' ? 'vscode-snippet' : props.language,
     theme: 'snippetTheme',
     automaticLayout: true,
     minimap: { enabled: false },

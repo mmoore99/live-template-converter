@@ -19,7 +19,7 @@
 
         <OutputPanel
           :content="formattedOutput"
-          :language="'jsonc'"
+          :language="'vscode-snippet'"
           :include-brackets="includeBrackets"
           @copy="copyToClipboard"
           @download="downloadJson"
