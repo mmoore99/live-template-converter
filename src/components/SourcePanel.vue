@@ -12,22 +12,35 @@
         Clear
       </button>
     </div>
-    <textarea 
-      :value="modelValue"
-      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
-      class="w-full h-[calc(100vh-300px)] p-4 font-mono text-sm border rounded"
-      placeholder="Paste your WebStorm template XML here..."
-    ></textarea>
+    <MonacoEditor
+      v-model="editorContent"
+      language="xml"
+      @update:modelValue="updateContent"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { ref, watch } from 'vue'
+import MonacoEditor from './MonacoEditor.vue'
+
+const props = defineProps<{
   modelValue: string
   templateCount: number
-}>();
-defineEmits<{
+}>()
+
+const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'clear'): void
-}>();
+}>()
+
+const editorContent = ref(props.modelValue)
+
+watch(() => props.modelValue, (newValue) => {
+  editorContent.value = newValue
+})
+
+function updateContent(value: string) {
+  emit('update:modelValue', value)
+}
 </script>
