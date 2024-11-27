@@ -1,13 +1,13 @@
 <template>
-  <div class="bg-white rounded-lg shadow p-4">
-    <div class="flex justify-between items-center mb-4">
+  <div class="p-4 bg-white rounded-lg shadow">
+    <div class="flex items-center justify-between mb-4">
       <div>
-        <h2 class="text-xl font-semibold">WebStorm Template</h2>
+        <h2 class="text-xl font-semibold">WebStorm Templates</h2>
         <p class="text-sm text-gray-600">{{ templateCount }} templates loaded</p>
       </div>
       <button 
         @click="$emit('clear')" 
-        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700"
       >
         Clear
       </button>

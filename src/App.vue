@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-4">
+  <div class="min-h-screen p-4 bg-gray-100">
     <div class="container mx-auto">
-      <h1 class="text-3xl font-bold text-center mb-8">WebStorm to VSCode Snippet Converter</h1>
+      <h1 class="mb-8 text-3xl font-bold text-center">Live Template Converter</h1>
       
       <div class="grid grid-cols-2 gap-4">
         <div class="col-span-1">
-          <div class="flex items-end mb-4 bg-white rounded-lg shadow p-4">
+          <div class="flex items-end p-4 mb-4 bg-white rounded-lg shadow">
             <FilenameInput v-model="filename" />
           </div>
         </div>
