@@ -104,6 +104,12 @@ function processBody(template: WebStormTemplate): string[] {
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'");
 
+    // Escape dollar signs and backslashes
+    value = value
+        .replace(/\\(?!\\)/g, "\\\\")
+        .replace(/`([^`]*)`/g, (match) => match.replace(/\$\{/g, "\\${"))
+        .replace(/\$(?![\d{])/g, "\\$");
+
     // Split into lines while preserving empty lines and indentation
     return value.split(/(?:&#10;|\n)/);
 }
